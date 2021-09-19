@@ -27,6 +27,26 @@ userSchema.pre('save', async function (next) {
 });
 
 
+// statics => ใช้สร้าง function ที่สามารถเรียกใช้ผ่าน model ได้ (เหมือนการเขียน obj ทั่วไป)
+// ต้องเป็น function เพื่อสามารถเรียกใช้ this (instance) จากตัวมันเองได้
+// จะรับ email, password มา จากนั้นหาใน db ว่ามี user ไหม
+// ถ้ามี ก็เอา password มาเทียบ
+userSchema.statics.login = async function(email, password) {
+    const user = await this.findOne({ email });
+
+    if (user) {
+        
+        const isAuth = await bcrypt.compare(password, user.password);
+        
+        if (isAuth) return user;
+
+        throw Error('incorrect password');
+    }
+
+    throw Error('incorrect email');
+}
+
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

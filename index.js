@@ -5,6 +5,8 @@ const express = require('express');
 const cookieParser = require('cookie-parser')
 const postRoutes = require('./routes/postRoutes');
 const authRoutes = require('./routes/authRoutes');
+const { requireAuth } = require('./middleware/authMiddleware');
+const User = require('./models/user');
 
 const app = express();
 
@@ -21,13 +23,21 @@ mongoose.connect(DBURI)
         const io = socket(server);
         
         io.on('connection', (socket) => {
-            console.log(socket.id);
+            console.log('ID: ', socket.id);
 
 
             // ถ้า user ส่ง post มา
             // จะ emit post ไปให้ทุกคน
-            socket.on('add-post', (data) => {
-                io.sockets.emit('add-post', data)
+            socket.on('add-post', async (data) => {
+                // หา user จาก id เพื่อแนบ email กลับไป
+                const user = await User.findById(data.user);
+                if (user) {
+                    data.user = {
+                        _id: data.user,
+                        email: user.email,
+                    };
+                    io.sockets.emit('add-post', data)
+                }
             })
         
         
@@ -50,7 +60,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // routes
-app.use('/post', postRoutes);
+app.use('/post', requireAuth, postRoutes);
 app.use('/auth', authRoutes);
 
 
