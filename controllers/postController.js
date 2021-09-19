@@ -37,7 +37,7 @@ module.exports.getPosts = (req, res) => {
             }
         }
     ]).sort({ createdAt: -1 })
-        .then(result => res.send({ data: { posts: result }}))
+        .then(result => res.send({ data: result }))
         .catch(err => console.log(err))
 }
 
@@ -49,6 +49,6 @@ module.exports.addPost = (req, res) => {
     const post = new Post({ text, user });
     
     post.save()
-        .then(result => res.send({ data: { post }}))
+        .then(result => res.send({ data: post }))
         .catch(err => console.log(err))
 }

@@ -13,7 +13,6 @@ const requireAuth = (req, res, next) => {
 
             } else {
                 
-                console.log(decodeToken);
                 next();
 
             }
