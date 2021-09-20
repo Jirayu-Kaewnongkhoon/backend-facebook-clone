@@ -34,7 +34,7 @@ mongoose.connect(DBURI)
                 if (user) {
                     data.user = {
                         _id: data.user,
-                        email: user.email,
+                        username: user.username,
                     };
                     io.sockets.emit('add-post', data)
                 }

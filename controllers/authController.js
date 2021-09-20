@@ -8,7 +8,7 @@ const createToken = (id) => {
 }
 
 const handleErrors = (error) => {
-    let errors = { email: '', password: '' };
+    let errors = { username: '', email: '', password: '' };
 
     if (error.code === 11000) {
         errors.email = 'email is already registerd';
@@ -50,10 +50,10 @@ module.exports.login = async (req, res) => {
 }
 
 module.exports.register = async (req, res) => {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
 
     try {
-        const user = new User({ email, password });
+        const user = new User({ username, email, password });
         const result = await user.save();
         const token = createToken(result._id);
         

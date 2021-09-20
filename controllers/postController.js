@@ -29,6 +29,7 @@ module.exports.getPosts = (req, res) => {
         { 
             '$project': { 
                 user: { 
+                    email: 0,
                     password: 0,
                     createdAt: 0,
                     updatedAt: 0,
