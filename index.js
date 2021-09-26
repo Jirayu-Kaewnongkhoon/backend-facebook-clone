@@ -5,6 +5,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser')
 const postRoutes = require('./routes/postRoutes');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const { requireAuth } = require('./middleware/authMiddleware');
 const User = require('./models/user');
 
@@ -28,6 +29,7 @@ mongoose.connect(DBURI)
 
             // ถ้า user ส่ง post มา
             // จะ emit post ไปให้ทุกคน
+            // TODO: emit ให้เฉพาะคนที่เป็นเพื่อน
             socket.on('add-post', async (data) => {
                 // หา user จาก id เพื่อแนบ email กลับไป
                 const user = await User.findById(data.user);
@@ -60,8 +62,9 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // routes
-app.use('/post', requireAuth, postRoutes);
 app.use('/auth', authRoutes);
+app.use('/post', requireAuth, postRoutes);
+app.use('/user', requireAuth, userRoutes);
 
 
 // send file
