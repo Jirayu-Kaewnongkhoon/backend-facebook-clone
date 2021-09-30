@@ -1,6 +1,7 @@
 const { Types } = require('mongoose');
 const Post = require('../models/post');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
 
 const getUserID = (token) => {
@@ -10,13 +11,24 @@ const getUserID = (token) => {
 }
 
 
-module.exports.getPosts = (req, res) => {
+module.exports.getPosts = async (req, res) => {
+
+    const id = getUserID(req.cookies.jwt);
+    const user = await User.findById(id);
 
     // aggregate => ใช้ query data แบบ advance
     // lookup => join collection ด้วย field
     // unwind => จะทำให้ user ที่ได้มา กลายเป็น obj (ถ้าไม่ใส่จะได้ user: [{}])
     // project => ใช้จัดการเลือก field มาแสดง output
     Post.aggregate([
+        {
+            $match: { 
+                $or: [ 
+                    { user: id },
+                    { user: { $in: user.friends } }
+                ]
+            }
+        },
         {
             $lookup: {
                 from: 'users',
@@ -38,7 +50,7 @@ module.exports.getPosts = (req, res) => {
             }
         }
     ]).sort({ createdAt: -1 })
-        .then(result => res.send({ data: result }))
+        .then(result => res.json({ data: result }))
         .catch(err => console.log(err))
 }
 
@@ -50,6 +62,6 @@ module.exports.addPost = (req, res) => {
     const post = new Post({ text, user });
     
     post.save()
-        .then(result => res.send({ data: post }))
+        .then(result => res.json({ data: post }))
         .catch(err => console.log(err))
 }

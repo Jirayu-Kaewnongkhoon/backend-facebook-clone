@@ -27,19 +27,39 @@ mongoose.connect(DBURI)
             console.log('ID: ', socket.id);
 
 
-            // ถ้า user ส่ง post มา
-            // จะ emit post ไปให้ทุกคน
-            // TODO: emit ให้เฉพาะคนที่เป็นเพื่อน
-            socket.on('add-post', async (data) => {
-                // หา user จาก id เพื่อแนบ email กลับไป
-                const user = await User.findById(data.user);
+            socket.on('join-room', async (id) => {
+                
+                // หา user ด้วย id ที่แนบมา
+                const user = await User.findById(id);
+
                 if (user) {
-                    data.user = {
-                        _id: data.user,
-                        username: user.username,
-                    };
-                    io.sockets.emit('add-post', data)
+
+                    // join room ตัวเอง
+                    socket.join(user._id.toString());
+
+                    // join room เพื่อน
+                    user.friends.forEach(friend => {
+                        socket.join(friend.toString())
+                    });
+
+                    console.log('ROOMS: ', socket.rooms);
+
+
+                    // ถ้า user ส่ง post มา
+                    // จะ emit post ไปให้ทุกคนที่เป็นเพื่อน
+                    socket.on('add-post', async (post) => {
+
+                        // แนบ username กลับไป
+                        post.user = {
+                            _id: user._id,
+                            username: user.username,
+                        };
+
+                        // ส่ง post ไปให้ทุกคนที่ join ห้องเราอยู่
+                        io.to(user._id.toString()).emit('receive-post', post);
+                    })
                 }
+
             })
         
         
