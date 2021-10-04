@@ -35,7 +35,7 @@ module.exports.getFriends = async (req, res) => {
     const id = getUserID(req.cookies.jwt);
     
     try {
-        const user = await User.findOne({ _id: id });
+        const user = await User.findById(id);
 
         const friends = await User.find(
             { _id: { $in: user.friends }},
@@ -44,6 +44,29 @@ module.exports.getFriends = async (req, res) => {
 
         res.status(200).json({ data: friends });
         
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+module.exports.getSuggestionFriends = async (req, res) => {
+    const id = getUserID(req.cookies.jwt);
+
+    try {
+        const user = await User.findById(id);
+
+        const suggestionFriends = await User.find(
+            {
+                $and: [ 
+                    { _id: { $ne : user._id} },
+                    { _id: { $nin: user.friends } }
+                ]
+            },
+            { username: 1 }
+        );
+
+        res.status(200).json({ data: suggestionFriends });
+
     } catch (error) {
         console.log(error);
     }
