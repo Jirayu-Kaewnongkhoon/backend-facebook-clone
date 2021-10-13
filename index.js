@@ -13,6 +13,8 @@ const app = express();
 
 const DBURI = 'mongodb+srv://test:test1234@cluster0.cqano.mongodb.net/facebook-clone?retryWrites=true&w=majority';
 
+let users = []
+
 // connect database
 mongoose.connect(DBURI)
     .then(() => {
@@ -24,13 +26,28 @@ mongoose.connect(DBURI)
         const io = socket(server);
         
         io.on('connection', (socket) => {
-            console.log('ID: ', socket.id);
+
+            const currentUser = {
+                socketID: socket.id,
+                userID: socket.handshake.query.userID
+            }
+            console.log('USER: ', currentUser);
+
+            const userIndex = users.findIndex(user => user.userID === currentUser.userID);
+
+            if (userIndex === -1) {
+                users = [...users, currentUser]
+            } else {
+                users[userIndex] = currentUser
+            }
+
+            console.log(users);
 
 
-            socket.on('join-room', async (id) => {
+            socket.on('join-room', async () => {
                 
                 // หา user ด้วย id ที่แนบมา
-                const user = await User.findById(id);
+                const user = await User.findById(currentUser.userID);
 
                 if (user) {
 
@@ -43,6 +60,21 @@ mongoose.connect(DBURI)
                     });
 
                     console.log('ROOMS: ', socket.rooms);
+
+
+                    socket.on('addFriend', (friendID) => {
+                        const friend = users.find(user => user.userID === friendID)
+                        
+                        // ถ้ามีใน list ก็จะส่ง data ไปแจ้ง
+                        // ถ้าไม่มีใน list (ไม่ได้ online) ก็จะไม่ต้องทำอะไร (จะทำงานส่วน db อย่างเดียว)
+                        if (friend) {
+                            console.log(`${currentUser.userID} add ${friend.userID}`);
+                            socket.to(friend.socketID).emit('addFriend', {
+                                username: user.username,
+                                _id: user._id
+                            });
+                        }
+                    })
 
 
                     // ถ้า user ส่ง post มา
@@ -63,7 +95,14 @@ mongoose.connect(DBURI)
             })
         
         
+            socket.on('logout', () => {
+                console.log('LOGOUT');
+                socket.disconnect();
+            })
+
             socket.on('disconnect', () => {
+                users = users.filter(user => user.userID !== currentUser.userID);
+                console.log(users);
                 console.log('USER DISCONNECTED');
             })
         })

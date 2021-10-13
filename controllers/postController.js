@@ -37,9 +37,11 @@ module.exports.getPosts = async (req, res) => {
                 as: 'user',
             }
         },
-        { '$unwind': '$user'},
         { 
-            '$project': { 
+            $unwind: '$user' 
+        },
+        { 
+            $project: { 
                 user: { 
                     email: 0,
                     password: 0,
