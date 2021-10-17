@@ -61,44 +61,58 @@ mongoose.connect(DBURI)
 
                     console.log('ROOMS: ', socket.rooms);
 
-
-                    socket.on('addFriend', (friendID) => {
-                        const friend = users.find(user => user.userID === friendID)
-                        
-                        // ถ้ามีใน list ก็จะส่ง data ไปแจ้ง
-                        // ถ้าไม่มีใน list (ไม่ได้ online) ก็จะไม่ต้องทำอะไร (จะทำงานส่วน db อย่างเดียว)
-                        if (friend) {
-                            console.log(`${currentUser.userID} add ${friend.userID}`);
-                            socket.to(friend.socketID).emit('addFriend', {
-                                username: user.username,
-                                _id: user._id
-                            });
-                        }
-                    })
-
-
-                    // ถ้า user ส่ง post มา
-                    // จะ emit post ไปให้ทุกคนที่เป็นเพื่อน
-                    socket.on('add-post', async (post) => {
-
-                        // แนบ username กลับไป
-                        post.user = {
-                            _id: user._id,
-                            username: user.username,
-                        };
-
-                        // ส่ง post ไปให้ทุกคนที่ join ห้องเราอยู่
-                        io.to(user._id.toString()).emit('receive-post', post);
-                    })
                 }
 
             })
         
+
+            socket.on('addFriend', async (friendID) => {
+                const friend = users.find(user => user.userID === friendID)
+                const user = await User.findById(currentUser.userID);
+                
+                // ถ้ามีใน list ก็จะส่ง data ไปแจ้ง
+                // ถ้าไม่มีใน list (ไม่ได้ online) ก็จะไม่ต้องทำอะไร (จะทำงานส่วน db อย่างเดียว)
+                if (friend) {
+                    console.log(`${currentUser.userID} add ${friend.userID}`);
+                    socket.to(friend.socketID).emit('addFriend', {
+                        username: user.username,
+                        _id: user._id
+                    });
+                }
+            })
+
+
+            socket.on('acceptRequest', async (friendID) => {
+                const friend = users.find(user => user.userID === friendID);
+                const user = await User.findById(currentUser.userID);
+
+                // ถ้ามีใน list ก็จะส่ง data ไปแจ้ง
+                // ถ้าไม่มีใน list (ไม่ได้ online) ก็จะไม่ต้องทำอะไร (จะทำงานส่วน db อย่างเดียว)
+                if (friend) {
+                    console.log(`${currentUser.userID} accept ${friend.userID}`);
+                    socket.to(friend.socketID).emit('acceptRequest', {
+                        username: user.username,
+                        _id: user._id
+                    })
+                }
+            })
+
+
+            // ถ้า user ส่ง post มา
+            // จะ emit post ไปให้ทุกคนที่เป็นเพื่อน
+            socket.on('add-post', (post) => {
+                const userID = post.user._id;
+
+                // ส่ง post ไปให้ทุกคนที่ join ห้องเราอยู่
+                socket.to(userID.toString()).emit('receive-post', post);
+            })
+
         
             socket.on('logout', () => {
                 console.log('LOGOUT');
                 socket.disconnect();
             })
+            
 
             socket.on('disconnect', () => {
                 users = users.filter(user => user.userID !== currentUser.userID);

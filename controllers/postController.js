@@ -64,6 +64,19 @@ module.exports.addPost = (req, res) => {
     const post = new Post({ text, user });
     
     post.save()
-        .then(result => res.json({ data: post }))
+        .then(async (result) => {
+
+            const userInfo = await User.findById(user);
+
+            // แนบ username กลับไป
+            const postWithUserInfo = {...result._doc};
+            
+            postWithUserInfo.user = {
+                _id: userInfo._id,
+                username: userInfo.username
+            }
+
+            res.json({ data: postWithUserInfo })
+        })
         .catch(err => console.log(err))
 }
