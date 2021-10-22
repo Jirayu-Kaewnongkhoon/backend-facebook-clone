@@ -9,8 +9,19 @@ const getUserID = (token) => {
 }
 
 
-module.exports.getUser = (req, res) => {
+module.exports.getUserByID = async (req, res) => {
+    const { id } = req.body;
+    
+    try {
+        const user = await User.findById(
+            id,
+            { username: 1 }
+        );
 
+        res.status(200).json({ data: user })
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 module.exports.addFriend = async (req, res) => {
