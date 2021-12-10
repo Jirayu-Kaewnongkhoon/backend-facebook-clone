@@ -56,6 +56,40 @@ module.exports.getPosts = async (req, res) => {
         .catch(err => console.log(err))
 }
 
+module.exports.getOwnPosts = (req, res) => {
+    const id = getUserID(req.cookies.jwt);
+
+    Post.aggregate([
+        {
+            $match: { user: id }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'user',
+            }
+        },
+        { 
+            $unwind: '$user' 
+        },
+        { 
+            $project: { 
+                user: { 
+                    email: 0,
+                    password: 0,
+                    createdAt: 0,
+                    updatedAt: 0,
+                    __v: 0,
+                } 
+            }
+        }
+    ]).sort({ createdAt: -1 })
+        .then(result => res.json({ data: result }))
+        .catch(err => console.log(err))
+}
+
 module.exports.addPost = (req, res) => {
 
     const user = getUserID(req.cookies.jwt);
