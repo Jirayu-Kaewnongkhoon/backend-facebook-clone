@@ -9,6 +9,8 @@ const userRoutes = require('./routes/userRoutes');
 const { requireAuth } = require('./middleware/authMiddleware');
 const User = require('./models/user');
 
+require('dotenv').config();
+
 const app = express();
 
 const DBURI = 'mongodb+srv://test:test1234@cluster0.cqano.mongodb.net/facebook-clone?retryWrites=true&w=majority';
@@ -19,7 +21,7 @@ let users = []
 mongoose.connect(DBURI)
     .then(() => {
         console.log('Connected to database');
-        const server = app.listen(3000, () => {
+        const server = app.listen(process.env.PORT || 3000, () => {
             console.log('Server running on port 3000');
         });
         
@@ -127,7 +129,11 @@ mongoose.connect(DBURI)
 
 
 // middleware
-app.use(cors({ origin: 'http://localhost:8080', credentials: true }));
+app.use(cors({
+    // origin: 'https://facebook-clone-53701.firebaseapp.com', 
+    origin: 'http://localhost:8080', 
+    credentials: true 
+}));
 app.use(cookieParser());
 // handle request body
 app.use(express.json());
@@ -138,23 +144,3 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/auth', authRoutes);
 app.use('/post', requireAuth, postRoutes);
 app.use('/user', requireAuth, userRoutes);
-
-
-// send file
-app.get('/about', (req, res) => {
-    res.sendFile('./views/about.html', { root: __dirname });
-})
-
-// redirect
-app.get('/about-us', (req, res) => {
-    res.redirect('/about');
-})
-
-// 404
-// กรณีที่ไม่ตรงกับ url ที่ประกาศไว้ข้างบน
-// จะลงมาทำที่นี่
-// *** app.use() จะทำงานทุกๆ request
-// ดังนั้น กรณี 404 จะต้องวางโค้ดไว้ล่างสุด
-app.use((req, res) => {
-    res.status(404).send('<h1>404</h1>');
-})

@@ -40,7 +40,7 @@ module.exports.login = async (req, res) => {
         const user = await User.login(email, password);
         const token = createToken(user._id);
         
-        res.cookie('jwt', token, { httpOnly: true, maxAge: exp * 1000 });
+        res.cookie('jwt', token, { httpOnly: true, maxAge: exp * 1000, sameSite: 'none', secure: true });
         res.status(200).json({ user: user._id });
 
     } catch (error) {
@@ -57,7 +57,7 @@ module.exports.register = async (req, res) => {
         const result = await user.save();
         const token = createToken(result._id);
         
-        res.cookie('jwt', token, { httpOnly: true, maxAge: exp * 1000 });
+        res.cookie('jwt', token, { httpOnly: true, maxAge: exp * 1000, sameSite: 'none', secure: true });
         res.status(200).json({ user: result._id });
 
     } catch (error) {
@@ -67,6 +67,6 @@ module.exports.register = async (req, res) => {
 }
 
 module.exports.logout = (req, res) => {
-    res.cookie('jwt', '', { maxAge: 1 });
+    res.cookie('jwt', '', { maxAge: 1, sameSite: 'none', secure: true  });
     res.status(200).json({ isSuccess: true });
 }
