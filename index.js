@@ -13,7 +13,8 @@ require('dotenv').config();
 
 const app = express();
 
-const DBURI = 'mongodb+srv://test:test1234@cluster0.cqano.mongodb.net/facebook-clone?retryWrites=true&w=majority';
+const DBURI = process.env.DBURI;
+const PORT = process.env.PORT || 3300;
 
 let users = []
 
@@ -21,8 +22,8 @@ let users = []
 mongoose.connect(DBURI)
     .then(() => {
         console.log('Connected to database');
-        const server = app.listen(process.env.PORT || 3000, () => {
-            console.log('Server running on port 3000');
+        const server = app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
         });
         
         const io = socket(server);
