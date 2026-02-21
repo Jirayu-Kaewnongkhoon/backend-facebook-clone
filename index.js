@@ -15,6 +15,7 @@ const app = express();
 
 const DBURI = process.env.DBURI;
 const PORT = process.env.PORT || 3300;
+const DOMAIN = process.env.DOMAIN;
 
 let users = []
 
