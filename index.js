@@ -132,7 +132,7 @@ mongoose.connect(DBURI)
 
 // middleware
 app.use(cors({
-    origin: ['http://localhost:8080', 'https://facebook-clone-53701.firebaseapp.com'], 
+    origin: ['http://localhost:8080', DOMAIN], 
     credentials: true 
 }));
 app.use(cookieParser());
